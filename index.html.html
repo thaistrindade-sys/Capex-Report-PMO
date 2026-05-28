@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visão Financeira PMO — Inovação BP | RD Station</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#1D9E75; --green-lt:#E8F5F0; --green-dk:#0D6B4F;
+  --amber:#EF9F27; --amber-lt:#FEF3E2;
+  --red:#E24B4A;   --red-lt:#FCEAEA;
+  --purple:#7C6FCD;--purple-lt:#EEF0FB;
+  --gray:#888780;  --gray-lt:#F4F3F0;
+  --navy:#1A2332;  --ink:#1C1C1E; --ink-2:#48484A; --ink-3:#8E8E93;
+  --border:#E5E4E0; --bg:#F7F6F3; --white:#FFFFFF;
+  --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.5}
+
+/* HEADER */
+.header{background:var(--navy);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-logo{background:var(--green);color:#fff;font-weight:700;font-size:11px;letter-spacing:.08em;padding:4px 10px;border-radius:5px}
+.header-title{color:#fff;font-size:15px;font-weight:500}
+.header-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-meta{color:rgba(255,255,255,.4);font-size:11px;font-family:"DM Mono",monospace;background:rgba(255,255,255,.06);padding:4px 12px;border-radius:5px}
+.btn-refresh{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:11px;font-family:"DM Sans",sans-serif;padding:4px 12px;border-radius:5px;cursor:pointer;transition:all .15s}
+.btn-refresh:hover{background:rgba(255,255,255,.18);color:#fff}
+.btn-refresh.loading{opacity:.5;cursor:not-allowed}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px}
+.status-dot.error{background:var(--red)}
+.status-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TABS */
+.tabs{display:flex;padding:0 28px;background:var(--white);border-bottom:1px solid var(--border)}
+.tab{padding:12px 22px;font-size:13px;font-weight:500;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;user-select:none}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--ink-3);font-size:13px}
+.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:12px;text-align:center;padding:40px}
+.error-icon{font-size:36px}
+.error-title{font-size:15px;font-weight:600;color:var(--red)}
+.error-msg{font-size:12px;color:var(--ink-3);max-width:400px;line-height:1.6}
+
+/* MAIN */
+.page{display:none;padding:24px 28px 40px}
+.page.active{display:block}
+.section-label{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:var(--white);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.kpi.warn{border-color:var(--amber)} .kpi.alert{border-color:var(--red)} .kpi.ok{border-color:var(--green)}
+.kpi-label{font-size:10.5px;color:var(--ink-3);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi.warn .kpi-val{color:var(--amber)} .kpi.alert .kpi-val{color:var(--red)} .kpi.ok .kpi-val{color:var(--green)}
+.kpi-sub{font-size:10.5px;color:var(--ink-3);margin-top:4px}
+
+/* PROJECT GRID */
+.proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px}
+.proj-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.proj-card.risk{border-color:var(--amber)} .proj-card.over{border-color:var(--red)} .proj-card.closed{border-color:#ccc;opacity:.88}
+.proj-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.proj-name{font-size:14px;font-weight:600;color:var(--ink)}
+.proj-meta{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.badge.green{background:var(--green-lt);color:var(--green-dk)}
+.badge.amber{background:var(--amber-lt);color:#854F0B}
+.badge.red{background:var(--red-lt);color:#A32D2D}
+.badge.gray{background:var(--gray-lt);color:#5F5E5A}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.metric{background:var(--bg);border-radius:7px;padding:8px 10px}
+.metric-label{font-size:9.5px;color:var(--ink-3);margin-bottom:2px;font-weight:500}
+.metric-val{font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.metric-sub{font-size:9.5px;margin-top:2px}
+.pos{color:var(--green)} .neg{color:var(--red)} .muted{color:var(--ink-3)}
+.prog-row{display:flex;align-items:center;gap:8px;margin-top:7px}
+.prog-label{font-size:10px;color:var(--ink-3);min-width:108px}
+.prog-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.prog-pct{font-size:10px;font-weight:600;color:var(--ink);min-width:30px;text-align:right;font-family:"DM Mono",monospace}
+.insight{border-left:3px solid;border-radius:0 7px 7px 0;padding:8px 12px;font-size:11px;color:var(--ink-2);line-height:1.55;margin-top:10px}
+.insight.green{background:var(--green-lt);border-color:var(--green)}
+.insight.amber{background:var(--amber-lt);border-color:var(--amber)}
+.insight.red{background:var(--red-lt);border-color:var(--red)}
+.insight.gray{background:var(--gray-lt);border-color:var(--gray)}
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+
+/* CHARTS */
+.chart-block{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:20px}
+.chart-block-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.chart-block-sub{font-size:11px;color:var(--ink-3);margin-bottom:14px}
+.legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.hbar-list{display:flex;flex-direction:column;gap:7px}
+.hbar-row{display:flex;align-items:center;gap:10px}
+.hbar-name{font-size:11px;color:var(--ink-2);width:150px;flex-shrink:0;text-align:right}
+.hbar-track{flex:1;height:22px;background:var(--bg);border-radius:4px;position:relative;overflow:hidden;max-width:520px}
+.hbar-bg{position:absolute;inset:0;background:var(--border);border-radius:4px;opacity:.5}
+.hbar-fg{position:absolute;top:0;left:0;height:100%;border-radius:4px;z-index:1;transition:width .6s ease}
+.hbar-val{font-size:10.5px;color:var(--ink-2);margin-left:8px;white-space:nowrap;font-family:"DM Mono",monospace;flex-shrink:0}
+.monthly-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.monthly-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.monthly-name{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.mini-bars{display:flex;gap:3px;align-items:flex-end;height:64px}
+.mini-col{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}
+.mini-pair{display:flex;gap:1.5px;align-items:flex-end;width:100%;height:54px}
+.mini-bar{border-radius:2px 2px 0 0;flex:1;transition:height .4s ease}
+.mini-lbl{font-size:8.5px;color:var(--ink-3);text-align:center}
+.monthly-footer{font-size:10px;color:var(--ink-3);margin-top:7px}
+.analysis{background:var(--bg);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--ink-2);line-height:1.7;margin-top:14px;border:1px solid var(--border)}
+.analysis strong{color:var(--ink)}
+.tag-red{display:inline-block;padding:1px 7px;border-radius:4px;background:var(--red-lt);color:#A32D2D;font-size:10.5px;font-weight:600}
+.tag-green{display:inline-block;padding:1px 7px;border-radius:4px;background:var(--green-lt);color:var(--green-dk);font-size:10.5px;font-weight:600}
+.tag-amber{display:inline-block;padding:1px 7px;border-radius:4px;background:var(--amber-lt);color:#854F0B;font-size:10.5px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">RD</div>
+    <div>
+      <div class="header-title">Visão Financeira PMO — Inovação (BP)</div>
+      <div class="header-sub" id="header-sub">8 projetos · carregando dados...</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="status-indicator"><span class="status-dot loading"></span><span id="status-text" style="color:rgba(255,255,255,.4);font-size:11px">Conectando...</span></span>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadAllData()">↻ Atualizar</button>
+    <div class="header-meta" id="header-meta">—</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('resumo',this)">Resumo por projeto</div>
+  <div class="tab" onclick="showTab('graficos',this)">Gráficos e análise</div>
+</div>
+
+<div id="tab-resumo" class="page active">
+  <div id="content-resumo"><div class="loading-screen"><div class="spinner"></div><div class="loading-text">Carregando dados da planilha...</div></div></div>
+</div>
+<div id="tab-graficos" class="page">
+  <div id="content-graficos"><div class="loading-screen"><div class="spinner"></div><div class="loading-text">Carregando dados da planilha...</div></div></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIGURAÇÃO — troque o SHEET_ID se mudar de planilha
+// ════════════════════════════════════════════════════════════
+const SHEET_ID = '1YvLsjWMqOCDZunHMUNnA1PL6FMAt10ZJCZOREQsMQPk';
+
+const SHEETS = {
+  resumo:    { gid: null, name: 'LS_Resumo_Projetos' },
+  capex:     { gid: null, name: 'LS_Capex_Mensal'    },
+  receita:   { gid: null, name: 'LS_Receita_Mensal'  },
+  bpAnual:   { gid: null, name: 'LS_Receita_BP_Anual'},
+};
+
+// Dados em memória
+let DATA = { resumo:[], capex:[], receita:[], bpAnual:[] };
+
+// ════════════════════════════════════════════════════════════
+// LEITURA DA PLANILHA VIA gviz/tq (não precisa de API key)
+// ════════════════════════════════════════════════════════════
+function sheetUrl(sheetName){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+function parseGviz(raw){
+  // Remove prefixo google.visualization.Query.setResponse(...)
+  const json = raw.replace(/^[^(]+\(/, '').replace(/\);?$/, '');
+  const obj  = JSON.parse(json);
+  const cols = obj.table.cols.map(c => c.label);
+  const rows = (obj.table.rows || []).map(r =>
+    Object.fromEntries(cols.map((c,i) => [c, r.c[i]?.v ?? null]))
+  );
+  return rows;
+}
+
+function parseNum(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/[^\d.,-]/g,'').replace(',','.')) || 0;
+}
+
+async function fetchSheet(sheetName){
+  const url  = sheetUrl(sheetName);
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error(`HTTP ${resp.status} ao buscar ${sheetName}`);
+  const text = await resp.text();
+  return parseGviz(text);
+}
+
+// ════════════════════════════════════════════════════════════
+// CARREGAMENTO PRINCIPAL
+// ════════════════════════════════════════════════════════════
+async function loadAllData(){
+  setStatus('loading','Atualizando...');
+  document.getElementById('btn-refresh').classList.add('loading');
+  document.getElementById('btn-refresh').disabled = true;
+
+  try {
+    const [resumo, capex, receita, bpAnual] = await Promise.all([
+      fetchSheet('LS_Resumo_Projetos'),
+      fetchSheet('LS_Capex_Mensal'),
+      fetchSheet('LS_Receita_Mensal'),
+      fetchSheet('LS_Receita_BP_Anual'),
+    ]);
+
+    DATA.resumo  = resumo;
+    DATA.capex   = capex;
+    DATA.receita = receita;
+    DATA.bpAnual = bpAnual;
+
+    const now = new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('header-meta').textContent = 'Atualizado ' + now;
+    document.getElementById('header-sub').textContent  = resumo.length + ' projetos · dados ao vivo';
+    setStatus('ok','Ao vivo');
+
+    renderResumo();
+    renderGraficos();
+  } catch(e){
+    setStatus('error','Erro ao carregar');
+    document.getElementById('content-resumo').innerHTML = errorScreen(e.message);
+    document.getElementById('content-graficos').innerHTML = errorScreen(e.message);
+    console.error(e);
+  }
+
+  document.getElementById('btn-refresh').classList.remove('loading');
+  document.getElementById('btn-refresh').disabled = false;
+}
+
+function setStatus(type, text){
+  const dot  = document.querySelector('.status-dot');
+  const span = document.getElementById('status-text');
+  dot.className  = 'status-dot' + (type==='error'?' error':type==='loading'?' loading':'');
+  span.textContent = text;
+}
+
+function errorScreen(msg){
+  return `<div class="error-screen">
+    <div class="error-icon">⚠</div>
+    <div class="error-title">Não foi possível carregar os dados</div>
+    <div class="error-msg">${msg}<br><br>Verifique se a planilha está pública e tente novamente clicando em ↻ Atualizar.</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// HELPERS DE FORMATAÇÃO
+// ════════════════════════════════════════════════════════════
+const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function fmtMi(v){
+  if(v===null||v===undefined) return '—';
+  const n = parseNum(v);
+  if(Math.abs(n)>=1e9)  return 'R$ '+(n/1e9).toFixed(2)+' bi';
+  if(Math.abs(n)>=1e6)  return 'R$ '+(n/1e6).toFixed(1)+' mi';
+  if(Math.abs(n)>=1e3)  return 'R$ '+(n/1e3).toFixed(0)+'k';
+  return 'R$ '+n.toFixed(0);
+}
+function fmtPct(v){ return v!==null? (parseNum(v)*100).toFixed(1)+'%':'—'; }
+function fmtNum(v){ return v!==null? parseNum(v).toLocaleString('pt-BR'):'—'; }
+
+function badgeHtml(status){
+  const map = {
+    'No prazo':         ['green','● No prazo'],
+    'Em investigação':  ['amber','⚠ Em investigação'],
+    'Estouro previsto': ['red',  '✕ Estouro previsto'],
+    'Colheita':         ['gray', '◉ Colheita'],
+  };
+  const [cls,lbl] = map[status] || ['gray', status];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function cardClass(status){
+  if(status==='Estouro previsto') return 'proj-card over';
+  if(status==='Em investigação')  return 'proj-card risk';
+  if(status==='Colheita')         return 'proj-card closed';
+  return 'proj-card';
+}
+
+function insightClass(status){
+  if(status==='Estouro previsto') return 'red';
+  if(status==='Em investigação')  return 'amber';
+  if(status==='Colheita')         return 'gray';
+  return 'green';
+}
+
+function progColor(status){
+  if(status==='Estouro previsto') return 'var(--red)';
+  if(status==='Em investigação')  return 'var(--amber)';
+  return 'var(--green)';
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER ABA 1 — RESUMO
+// ════════════════════════════════════════════════════════════
+function renderResumo(){
+  const rows   = DATA.resumo;
+  const ativos = rows.filter(r=>r.TIPO==='Ativo');
+  const encerr = rows.filter(r=>r.TIPO==='Encerrado');
+
+  const totalFcst  = ativos.reduce((s,r)=>s+parseNum(r.CAPEX_FCST_2026),0);
+  const totalReal  = ativos.reduce((s,r)=>s+parseNum(r.CAPEX_REAL_JAN_ABR),0);
+  const pctExec    = totalFcst>0? (totalReal/totalFcst*100).toFixed(0)+'%':'—';
+  const totalBP    = rows.reduce((s,r)=>s+parseNum(r.RECEITA_BP_TOTAL),0);
+  const estouros   = rows.filter(r=>r.STATUS==='Estouro previsto').length;
+  const noPrazo    = rows.filter(r=>r.STATUS==='No prazo').length;
+
+  let html = `
+  <div class="section-label" style="margin-bottom:10px">Portfólio 2026 — Jan a Abr</div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Capex FCST 2026</div><div class="kpi-val">${fmtMi(totalFcst)}</div><div class="kpi-sub">${ativos.length} projetos com capex ativo</div></div>
+    <div class="kpi warn"><div class="kpi-label">Realizado Jan–Abr</div><div class="kpi-val">${fmtMi(totalReal)}</div><div class="kpi-sub">${pctExec} do FCST · esperado 33%</div></div>
+    <div class="kpi alert"><div class="kpi-label">Projetos com estouro</div><div class="kpi-val">${estouros}</div><div class="kpi-sub">${rows.filter(r=>r.STATUS==='Estouro previsto').map(r=>r.PROJETO).join(' e ')}</div></div>
+    <div class="kpi"><div class="kpi-label">Receita BP portfólio</div><div class="kpi-val">${fmtMi(totalBP)}</div><div class="kpi-sub">Acumulado total projetado</div></div>
+    <div class="kpi ok"><div class="kpi-label">Projetos no prazo</div><div class="kpi-val">${noPrazo}</div><div class="kpi-sub">${rows.filter(r=>r.STATUS==='No prazo').map(r=>r.PROJETO).join(' · ')}</div></div>
+  </div>
+  <div class="section-label">Projetos com capex ativo em 2026</div>
+  <div class="proj-grid">`;
+
+  ativos.forEach(r=>{
+    const pct    = parseNum(r.PCT_EXECUCAO);
+    const pctDisp= isNaN(pct)? parseNum(r.CAPEX_REAL_JAN_ABR)/parseNum(r.CAPEX_FCST_2026): pct;
+    const pctPct = Math.min((pctDisp>1?pctDisp:pctDisp*100),100);
+    const desvio = parseNum(r.DESVIO_FCST_ACUM);
+    const desvioFmt = desvio>=0?
+      `<span class="pos">Delta: +${fmtMi(desvio)}</span>`:
+      `<span class="neg">Estouro: ${fmtMi(desvio)}</span>`;
+
+    html += `
+    <div class="${cardClass(r.STATUS)}">
+      <div class="proj-top">
+        <div><div class="proj-name">${r.PROJETO}</div><div class="proj-meta">TIR ${r.TIR_% || r['TIR_%']} · Payback ${r.PAYBACK_MESES}m · Capex total ${fmtMi(r.CAPEX_TOTAL_PROJETO)}</div></div>
+        ${badgeHtml(r.STATUS)}
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Realizado Jan–Abr</div><div class="metric-val">${fmtMi(r.CAPEX_REAL_JAN_ABR)}</div><div class="metric-sub">${desvioFmt}</div></div>
+        <div class="metric"><div class="metric-label">FCST 2026</div><div class="metric-val">${fmtMi(r.CAPEX_FCST_2026)}</div><div class="metric-sub muted">—</div></div>
+        <div class="metric"><div class="metric-label">Receita BP total</div><div class="metric-val">${fmtMi(r.RECEITA_BP_TOTAL)}</div><div class="metric-sub muted">Início: ${r.INICIO_RECEITA}</div></div>
+        <div class="metric"><div class="metric-label">% Execução</div><div class="metric-val">${pctPct.toFixed(1)}%</div><div class="metric-sub muted">vs 33% esperado</div></div>
+      </div>
+      <div class="prog-row">
+        <span class="prog-label">Capex executado 2026</span>
+        <div class="prog-track"><div class="prog-fill" style="width:${Math.min(pctPct,100)}%;background:${progColor(r.STATUS)}"></div></div>
+        <span class="prog-pct">${pctPct.toFixed(0)}%</span>
+      </div>
+      <div class="insight ${insightClass(r.STATUS)}">${r.INSIGHT_EXECUTIVO || '—'}</div>
+    </div>`;
+  });
+
+  html += `</div><hr class="divider"><div class="section-label">Projetos encerrados — fase de colheita</div><div class="proj-grid">`;
+
+  encerr.forEach(r=>{
+    html += `
+    <div class="${cardClass(r.STATUS)}">
+      <div class="proj-top">
+        <div><div class="proj-name">${r.PROJETO}</div><div class="proj-meta">TIR ${r.TIR_% || r['TIR_%']} · Payback ${r.PAYBACK_MESES}m</div></div>
+        ${badgeHtml(r.STATUS)}
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Capex total realizado</div><div class="metric-val">${fmtMi(r.CAPEX_TOTAL_PROJETO)}</div><div class="metric-sub muted">Sem capex em 2026</div></div>
+        <div class="metric"><div class="metric-label">Receita realizada 2026</div><div class="metric-val">${fmtMi(r.RECEITA_REAL_2026_JAN_ABR)}</div><div class="metric-sub pos">Jan–Abr</div></div>
+        <div class="metric"><div class="metric-label">Receita BP total</div><div class="metric-val">${fmtMi(r.RECEITA_BP_TOTAL)}</div><div class="metric-sub muted">—</div></div>
+        <div class="metric"><div class="metric-label">TIR / Payback</div><div class="metric-val">${r.TIR_% || r['TIR_%']} / ${r.PAYBACK_MESES}m</div><div class="metric-sub pos">—</div></div>
+      </div>
+      <div class="insight ${insightClass(r.STATUS)}">${r.INSIGHT_EXECUTIVO || '—'}</div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('content-resumo').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER ABA 2 — GRÁFICOS
+// ════════════════════════════════════════════════════════════
+function renderGraficos(){
+  let html = '';
+
+  // 1. Capex consolidado
+  const resumo = DATA.resumo.filter(r=>r.TIPO==='Ativo');
+  const maxFcst = Math.max(...resumo.map(r=>parseNum(r.CAPEX_FCST_2026)));
+
+  html += `
+  <div class="chart-block">
+    <div class="chart-block-title">Capex 2026 por projeto — Realizado vs FCST</div>
+    <div class="chart-block-sub">Barras: fundo = FCST total 2026 · frente = realizado Jan–Abr · Ritmo esperado: 33%</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green);opacity:.85"></div> Realizado Jan–Abr</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> FCST total 2026</div>
+    </div>
+    <div class="hbar-list">`;
+
+  resumo.forEach(r=>{
+    const fcst = parseNum(r.CAPEX_FCST_2026);
+    const real = parseNum(r.CAPEX_REAL_JAN_ABR);
+    const pct  = fcst>0? Math.min((real/fcst*100),100):0;
+    const over = r.STATUS==='Estouro previsto'||r.STATUS==='Em investigação';
+    const color= over?'var(--red)':'var(--green)';
+    const tag  = over?` ⚠`:'';
+    html += `
+      <div class="hbar-row">
+        <span class="hbar-name">${r.PROJETO}</span>
+        <div class="hbar-track">
+          <div class="hbar-bg"></div>
+          <div class="hbar-fg" style="width:${pct.toFixed(1)}%;background:${color};opacity:.85"></div>
+        </div>
+        <span class="hbar-val">${fmtMi(real)} / FCST ${fmtMi(fcst)} · ${pct.toFixed(0)}%${tag}</span>
+      </div>`;
+  });
+
+  html += `</div>
+    <div class="analysis"><strong>Análise:</strong> Com 4 de 12 meses concluídos (33% do ano), o portfólio executou ${((DATA.resumo.filter(r=>r.TIPO==='Ativo').reduce((s,r)=>s+parseNum(r.CAPEX_REAL_JAN_ABR),0)/DATA.resumo.filter(r=>r.TIPO==='Ativo').reduce((s,r)=>s+parseNum(r.CAPEX_FCST_2026),0))*100).toFixed(0)}% do FCST — <span class="tag-red">abaixo do ritmo esperado</span>. RD Conversas já consumiu ${((parseNum(DATA.resumo.find(r=>r.PROJETO==='RD Conversas')?.CAPEX_REAL_JAN_ABR)/parseNum(DATA.resumo.find(r=>r.PROJETO==='RD Conversas')?.CAPEX_FCST_2026))*100).toFixed(0)}% do FCST anual em apenas 4 meses.</div>
+  </div>`;
+
+  // 2. Capex mensal por projeto
+  const projetos = [...new Set(DATA.capex.map(r=>r.PROJETO))];
+  html += `
+  <div class="chart-block">
+    <div class="chart-block-title">Capex mensal por projeto — FCST vs Realizado (R$ mil) · 2026</div>
+    <div class="chart-block-sub">Barra escura = FCST mensal · Barra colorida = Realizado (jan–abr) · Meses sem dado = apenas FCST</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2d2d2d;opacity:.4"></div> FCST mensal</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Realizado</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Estouro</div>
+    </div>
+    <div class="monthly-grid">`;
+
+  projetos.forEach(proj=>{
+    const rows = DATA.capex.filter(r=>r.PROJETO===proj).sort((a,b)=>parseNum(a.MES_NUM)-parseNum(b.MES_NUM));
+    const resumoRow = DATA.resumo.find(r=>r.PROJETO===proj)||{};
+    const isOver = resumoRow.STATUS==='Estouro previsto'||resumoRow.STATUS==='Em investigação';
+    const color  = isOver?'var(--amber)':'var(--green)';
+
+    const fcstVals = rows.map(r=>parseNum(r.FCST)||0);
+    const realVals = rows.map(r=>r.REALIZADO!==null&&r.REALIZADO!==undefined&&r.REALIZADO!==''?parseNum(r.REALIZADO):null);
+    const maxV     = Math.max(...fcstVals,...realVals.filter(v=>v!==null).map(v=>Math.abs(v)),1);
+
+    const fcstTotal = fcstVals.reduce((a,b)=>a+b,0);
+    const realTotal = realVals.filter(v=>v!==null&&v>0).reduce((a,b)=>a+b,0);
+
+    let bars = '<div class="mini-bars">';
+    rows.forEach((row,i)=>{
+      const fH   = Math.round((fcstVals[i]/maxV)*52);
+      const hasR = realVals[i]!==null;
+      const rH   = hasR?Math.round((Math.abs(realVals[i])/maxV)*52):0;
+      const neg  = hasR&&realVals[i]<0;
+      const ov   = isOver&&hasR&&realVals[i]>fcstVals[i];
+      const bc   = neg||ov?'var(--red)':color;
+      bars += `<div class="mini-col">
+        <div class="mini-pair">
+          <div class="mini-bar" style="height:${fH}px;background:#2d2d2d;opacity:.3"></div>
+          <div class="mini-bar" style="height:${hasR?rH:0}px;background:${bc};opacity:.85"></div>
+        </div>
+        <div class="mini-lbl">${MONTHS[i]}</div>
+      </div>`;
+    });
+    bars += '</div>';
+
+    html += `
+      <div class="monthly-card">
+        <div class="monthly-name">${proj}</div>
+        ${bars}
+        <div class="monthly-footer">FCST anual: ${fmtMi(fcstTotal)} · Realizado jan–abr: ${fmtMi(realTotal)}</div>
+      </div>`;
+  });
+
+  html += `</div>
+    <div class="analysis"><strong>Análise mensal:</strong> Payments apresentou pico atípico em março por falha de compensação de provisionamento, seguido de valor negativo em abril (estorno retroativo). RD Conversas mantém realizado sistematicamente acima do FCST desde janeiro. Hiperpersonalização teve janeiro abaixo do previsto por atraso em contratações, normalizando nos meses seguintes.</div>
+  </div>`;
+
+  // 3. Receita mensal
+  const projReceita = [...new Set(DATA.receita.map(r=>r.PROJETO))];
+  html += `
+  <div class="chart-block">
+    <div class="chart-block-title">Receita mensal por projeto — Projetada vs Realizada (R$ mil) · 2026</div>
+    <div class="chart-block-sub">Projetos com receita em 2026 · Barra escura = projetada · Barra colorida = realizada</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2d2d2d;opacity:.4"></div> Receita projetada</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Receita realizada</div>
+    </div>
+    <div class="monthly-grid">`;
+
+  projReceita.forEach(proj=>{
+    const rows = DATA.receita.filter(r=>r.PROJETO===proj).sort((a,b)=>parseNum(a.MES_NUM)-parseNum(b.MES_NUM));
+    const projV = rows.map(r=>parseNum(r.PROJETADA)||0);
+    const realV = rows.map(r=>r.REALIZADA!==null&&r.REALIZADA!==undefined&&r.REALIZADA!==''?parseNum(r.REALIZADA):null);
+    const maxV  = Math.max(...projV,...realV.filter(v=>v!==null).map(v=>Math.abs(v)),1);
+    const projTotal = projV.reduce((a,b)=>a+b,0);
+    const realTotal = realV.filter(v=>v!==null&&v>0).reduce((a,b)=>a+b,0);
+
+    let bars = '<div class="mini-bars">';
+    rows.forEach((row,i)=>{
+      const fH   = Math.round((projV[i]/maxV)*52);
+      const hasR = realV[i]!==null;
+      const rH   = hasR?Math.round((Math.abs(realV[i])/maxV)*52):0;
+      bars += `<div class="mini-col">
+        <div class="mini-pair">
+          <div class="mini-bar" style="height:${fH}px;background:#2d2d2d;opacity:.3"></div>
+          <div class="mini-bar" style="height:${hasR?rH:0}px;background:var(--purple);opacity:.85"></div>
+        </div>
+        <div class="mini-lbl">${MONTHS[i]||''}</div>
+      </div>`;
+    });
+    bars += '</div>';
+
+    html += `
+      <div class="monthly-card">
+        <div class="monthly-name">${proj}</div>
+        ${bars}
+        <div class="monthly-footer">Proj. anual: ${fmtMi(projTotal)} · Realizado jan–abr: ${fmtMi(realTotal)}</div>
+      </div>`;
+  });
+
+  html += `</div>
+    <div class="analysis"><strong>Análise — Receita:</strong> Checkin é o único projeto com receita realizada expressiva e consistente (~R$ 1,2 mi/mês), confirmando a aderência do modelo BP. <span class="tag-green">Benchmark positivo</span> A aderência de Checkin valida a metodologia para os demais projetos. Os demais projetos ativos não geraram receita expressiva em 2026 — receita substancial esperada a partir de 2027.</div>
+  </div>`;
+
+  // 4. Receita BP acumulada
+  const bpPorProjeto = {};
+  DATA.bpAnual.forEach(r=>{
+    if(!bpPorProjeto[r.PROJETO]) bpPorProjeto[r.PROJETO]=0;
+    bpPorProjeto[r.PROJETO]+=parseNum(r.RECEITA_BP)||0;
+  });
+  const capexPorProjeto = {};
+  DATA.resumo.forEach(r=>{ capexPorProjeto[r.PROJETO]=parseNum(r.CAPEX_TOTAL_PROJETO)||0; });
+
+  const bpList = Object.entries(bpPorProjeto).sort((a,b)=>b[1]-a[1]);
+  const maxBP  = bpList[0]?.[1]||1;
+
+  html += `
+  <div class="chart-block">
+    <div class="chart-block-title">Receita BP acumulada total por projeto</div>
+    <div class="chart-block-sub">Toda a receita projetada pelo BP ao longo do ciclo de vida de cada projeto</div>
+    <div class="hbar-list">`;
+
+  bpList.forEach(([proj,val])=>{
+    const pct  = (val/maxBP*100).toFixed(1);
+    const cap  = capexPorProjeto[proj]||0;
+    const eff  = cap>0?Math.round(val/cap):'—';
+    html += `
+      <div class="hbar-row">
+        <span class="hbar-name">${proj}</span>
+        <div class="hbar-track">
+          <div class="hbar-fg" style="width:${pct}%;background:var(--purple);opacity:.75"></div>
+        </div>
+        <span class="hbar-val">${fmtMi(val)} · Capex: ${fmtMi(cap)} · ${eff}x</span>
+      </div>`;
+  });
+
+  html += `</div>
+    <div class="analysis"><strong>Análise — Eficiência de capital:</strong> RD Conversas apresenta a maior eficiência do portfólio: receita BP elevada com capex de apenas R$ 4,2 mi. <span class="tag-amber">Decisão crítica</span> O encerramento por estouro deve ser avaliado com cautela frente a esse retorno projetado. Starship concentra o maior volume absoluto de receita do portfólio.</div>
+  </div>`;
+
+  document.getElementById('content-graficos').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════
+function showTab(id, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// Inicia carregamento
+loadAllData();
+</script>
+</body>
+</html>
